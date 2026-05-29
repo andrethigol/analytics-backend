@@ -1,33 +1,25 @@
 // ============================================
 // SERVIDOR PRINCIPAL DO BACKEND
 // ============================================
-// Este é o ponto de entrada da nossa API REST.
-// Ele inicializa o Express, configura os
-// middlewares e registra todas as rotas.
+// Agora com a rota de autenticação registrada.
 
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import authRoutes from './routes/auth'
 
-// Carrega as variáveis do arquivo .env
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
 // --- MIDDLEWARES ---
-// cors: permite que o frontend (localhost:3000)
-//       acesse o backend (localhost:3001)
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000'
 }))
-
-// express.json: permite receber dados em JSON
 app.use(express.json())
 
-// --- ROTA DE HEALTH CHECK ---
-// Usada para verificar se o servidor está vivo
-// Útil no deploy (Vercel/Railway verificam isso)
+// --- HEALTH CHECK ---
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -36,27 +28,30 @@ app.get('/health', (req, res) => {
   })
 })
 
-// --- ROTAS DA API ---
-// Por enquanto vazia — vamos adicionar
-// uma por uma nas próximas etapas
+// --- ROTAS ---
+// Autenticação: /auth/google, /auth/google/callback, /auth/status
+app.use('/auth', authRoutes)
+
+// Índice da API
 app.get('/api', (req, res) => {
   res.json({
     message: 'Analytics Backend rodando!',
     version: '1.0.0',
     endpoints: [
+      '/auth/google',
+      '/auth/status',
       '/api/analytics',
       '/api/google-ads',
       '/api/search-console',
       '/api/meta-ads',
-      '/api/ubersuggest',
     ]
   })
 })
 
-// --- INICIALIZA O SERVIDOR ---
+// --- INICIALIZA ---
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`)
-  console.log(`📊 Analytics Backend v1.0.0`)
+  console.log(`🔐 Auth Google: http://localhost:${PORT}/auth/google`)
 })
 
 export default app
