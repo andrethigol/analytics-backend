@@ -1,12 +1,12 @@
 // ============================================
 // SERVIDOR PRINCIPAL DO BACKEND
 // ============================================
-// Agora com a rota de autenticação registrada.
 
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth'
+import analyticsRoutes from './routes/analytics'
 
 dotenv.config()
 
@@ -29,21 +29,20 @@ app.get('/health', (req, res) => {
 })
 
 // --- ROTAS ---
-// Autenticação: /auth/google, /auth/google/callback, /auth/status
 app.use('/auth', authRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
-// Índice da API
+// --- ÍNDICE ---
 app.get('/api', (req, res) => {
   res.json({
     message: 'Analytics Backend rodando!',
     version: '1.0.0',
     endpoints: [
       '/auth/google',
-      '/auth/status',
-      '/api/analytics',
-      '/api/google-ads',
-      '/api/search-console',
-      '/api/meta-ads',
+      '/auth/status/:userId',
+      '/api/analytics/properties/:userId',
+      '/api/analytics/metrics/:userId/:propertyId',
+      '/api/analytics/chart/:userId/:propertyId',
     ]
   })
 })
