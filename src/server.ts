@@ -7,6 +7,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth'
 import analyticsRoutes from './routes/analytics'
+import aiRoutes from './routes/ai'
 
 dotenv.config()
 
@@ -15,7 +16,10 @@ const PORT = process.env.PORT || 3001
 
 // --- MIDDLEWARES ---
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 app.use(express.json())
 
@@ -31,6 +35,7 @@ app.get('/health', (req, res) => {
 // --- ROTAS ---
 app.use('/auth', authRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/ai', aiRoutes)
 
 // --- ÍNDICE ---
 app.get('/api', (req, res) => {
@@ -43,6 +48,8 @@ app.get('/api', (req, res) => {
       '/api/analytics/properties/:userId',
       '/api/analytics/metrics/:userId/:propertyId',
       '/api/analytics/chart/:userId/:propertyId',
+      '/api/ai/analyze',
+      '/api/ai/insight',
     ]
   })
 })
@@ -51,6 +58,7 @@ app.get('/api', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`)
   console.log(`🔐 Auth Google: http://localhost:${PORT}/auth/google`)
+  console.log(`🤖 AI Analysis: http://localhost:${PORT}/api/ai/analyze`)
 })
 
 export default app
