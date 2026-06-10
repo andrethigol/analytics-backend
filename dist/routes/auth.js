@@ -42,7 +42,7 @@ router.get('/google/callback', async (req, res) => {
         const oauth2 = googleapis_1.google.oauth2({ version: 'v2', auth: authedClient });
         const { data: googleUser } = await oauth2.userinfo.get();
         if (!googleUser.email) {
-            res.redirect('http://localhost:3000/dashboard?auth=error');
+            res.redirect(`${process.env.FRONTEND_URL}/dashboard?auth=error`);
             return;
         }
         // 4. Salva ou atualiza usuário no Supabase
@@ -74,11 +74,11 @@ router.get('/google/callback', async (req, res) => {
         if (tokenError)
             throw tokenError;
         console.log(`✅ Usuário autenticado: ${googleUser.email}`);
-        res.redirect(`http://localhost:3000/dashboard?auth=success&userId=${user.id}`);
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard?auth=success&userId=${user.id}`);
     }
     catch (error) {
         console.error('❌ Erro na autenticação:', error);
-        res.redirect('http://localhost:3000/dashboard?auth=error');
+        res.redirect(`${process.env.FRONTEND_URL}/dashboard?auth=error`);
     }
 });
 // --- ROTA 3: Status da autenticação ---
