@@ -17,7 +17,11 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 // --- MIDDLEWARES ---
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://analytics-dashboard-smoky-six.vercel.app',
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
