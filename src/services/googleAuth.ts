@@ -20,11 +20,18 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 // Cria o cliente OAuth2 com nossas credenciais
-export const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-)
+dotenv.config()
+
+// Função que cria o cliente OAuth2 com as variáveis já carregadas
+function createOAuth2Client() {
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  )
+}
+
+export const oauth2Client = createOAuth2Client()
 
 // Escopos = permissões que vamos pedir ao usuário
 // Cada escopo dá acesso a uma API específica

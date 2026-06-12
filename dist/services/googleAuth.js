@@ -26,7 +26,12 @@ const googleapis_1 = require("googleapis");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // Cria o cliente OAuth2 com nossas credenciais
-exports.oauth2Client = new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
+dotenv_1.default.config();
+// Função que cria o cliente OAuth2 com as variáveis já carregadas
+function createOAuth2Client() {
+    return new googleapis_1.google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
+}
+exports.oauth2Client = createOAuth2Client();
 // Escopos = permissões que vamos pedir ao usuário
 // Cada escopo dá acesso a uma API específica
 const SCOPES = [
