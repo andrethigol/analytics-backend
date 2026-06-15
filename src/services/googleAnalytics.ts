@@ -1,5 +1,5 @@
 // ============================================
-// SERVIÇO: GOOGLE ANALYTICS DATA API
+// SERVIÇO: GOOGLE ANALYTICS + SEARCH CONSOLE
 // ============================================
 
 import { google } from 'googleapis'
@@ -44,18 +44,19 @@ async function getAuthClientForUser(userId: string) {
   return auth
 }
 
-// Busca as propriedades GA4 disponíveis
+// ============================================
+// GOOGLE ANALYTICS 4
+// ============================================
+
 export async function getGA4Properties(userId: string) {
   const auth = await getAuthClientForUser(userId)
   const analyticsAdmin = google.analyticsadmin({ version: 'v1beta', auth })
 
-  // Primeiro busca todas as contas
   const accountsResponse = await analyticsAdmin.accounts.list()
   const accounts = accountsResponse.data.accounts || []
 
   if (accounts.length === 0) return []
 
-  // Para cada conta busca as propriedades
   const allProperties: any[] = []
 
   for (const account of accounts) {
@@ -77,7 +78,6 @@ export async function getGA4Properties(userId: string) {
   return allProperties
 }
 
-// Busca métricas principais do GA4
 export async function getGA4Metrics(userId: string, propertyId: string) {
   const auth = await getAuthClientForUser(userId)
   const analyticsData = google.analyticsdata({ version: 'v1beta', auth })
@@ -108,7 +108,6 @@ export async function getGA4Metrics(userId: string, propertyId: string) {
   }
 }
 
-// Busca dados por período para o gráfico
 export async function getGA4ChartData(userId: string, propertyId: string) {
   const auth = await getAuthClientForUser(userId)
   const analyticsData = google.analyticsdata({ version: 'v1beta', auth })
@@ -132,5 +131,111 @@ export async function getGA4ChartData(userId: string, propertyId: string) {
     usuarios:  Number(row.metricValues?.[0]?.value || 0),
     sessoes:   Number(row.metricValues?.[1]?.value || 0),
     pageviews: Number(row.metricValues?.[2]?.value || 0),
+  })) || []
+}
+
+// ============================================
+// SEARCH CONSOLE
+// ============================================
+
+// Lista todos os sites do usuário no Search Console
+export async function getSearchConsoleSites(userId: string) {
+  const auth = await getAuthClientForUser(userId)
+  const searchConsole = google.searchconsole({ version: 'v1', auth })
+
+  const { data } = await searchConsole.sites.list()
+  const sites = data.siteEntry || []
+
+  return sites.map(site => ({
+    siteUrl: site.siteUrl || '',
+    permissionLevel: site.permissionLevel || '',
+  }))
+}
+
+// Métricas principais do Search Console (cliques, impressões, CTR, posição)
+export async function getSearchConsoleMetrics(userId: string, siteUrl: string) {
+  const auth = await getAuthClientForUser(userId)
+  const searchConsole = google.searchconsole({ version: 'v1', auth })
+
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 30)
+
+  const fmt = (d: Date) => d.toISOString().split('T')[0]
+
+  const { data } = await searchConsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate: fmt(startDate),
+      endDate: fmt(endDate),
+      dimensions: [],
+    },
+  })
+
+  const row = data.rows?.[0]
+  return {
+    clicks:      Math.round(row?.clicks || 0),
+    impressions: Math.round(row?.impressions || 0),
+    ctr:         Number(((row?.ctr || 0) * 100).toFixed(1)),
+    position:    Number((row?.position || 0).toFixed(1)),
+  }
+}
+
+// Dados por período para o gráfico do Search Console
+export async function getSearchConsoleChartData(userId: string, siteUrl: string) {
+  const auth = await getAuthClientForUser(userId)
+  const searchConsole = google.searchconsole({ version: 'v1', auth })
+
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 30)
+
+  const fmt = (d: Date) => d.toISOString().split('T')[0]
+
+  const { data } = await searchConsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate: fmt(startDate),
+      endDate: fmt(endDate),
+      dimensions: ['date'],
+    },
+  })
+
+  return data.rows?.map(row => ({
+    date:        row.keys?.[0] || '',
+    clicks:      Math.round(row.clicks || 0),
+    impressions: Math.round(row.impressions || 0),
+    ctr:         Number(((row.ctr || 0) * 100).toFixed(1)),
+    position:    Number((row.position || 0).toFixed(1)),
+  })) || []
+}
+
+// Top queries (palavras-chave) do Search Console
+export async function getSearchConsoleTopQueries(userId: string, siteUrl: string) {
+  const auth = await getAuthClientForUser(userId)
+  const searchConsole = google.searchconsole({ version: 'v1', auth })
+
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - 30)
+
+  const fmt = (d: Date) => d.toISOString().split('T')[0]
+
+  const { data } = await searchConsole.searchanalytics.query({
+    siteUrl,
+    requestBody: {
+      startDate: fmt(startDate),
+      endDate: fmt(endDate),
+      dimensions: ['query'],
+      rowLimit: 10,
+    },
+  })
+
+  return data.rows?.map(row => ({
+    query:       row.keys?.[0] || '',
+    clicks:      Math.round(row.clicks || 0),
+    impressions: Math.round(row.impressions || 0),
+    ctr:         Number(((row.ctr || 0) * 100).toFixed(1)),
+    position:    Number((row.position || 0).toFixed(1)),
   })) || []
 }

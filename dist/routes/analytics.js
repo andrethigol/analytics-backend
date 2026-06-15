@@ -1,23 +1,14 @@
 "use strict";
 // ============================================
-// ROTA: GOOGLE ANALYTICS
+// ROTA: GOOGLE ANALYTICS + SEARCH CONSOLE
 // ============================================
-// Endpoints que o frontend vai chamar para
-// buscar dados reais do Google Analytics 4.
-//
-// GET /api/analytics/properties/:userId
-//   → lista as propriedades GA4 do usuário
-//
-// GET /api/analytics/metrics/:userId/:propertyId
-//   → métricas principais (cards do dashboard)
-//
-// GET /api/analytics/chart/:userId/:propertyId
-//   → dados para o gráfico de linha
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const googleAnalytics_1 = require("../services/googleAnalytics");
 const router = (0, express_1.Router)();
-// --- Lista propriedades GA4 disponíveis ---
+// ============================================
+// GOOGLE ANALYTICS 4
+// ============================================
 router.get('/properties/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
@@ -29,7 +20,6 @@ router.get('/properties/:userId', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// --- Métricas principais ---
 router.get('/metrics/:userId/:propertyId', async (req, res) => {
     const { userId, propertyId } = req.params;
     try {
@@ -41,7 +31,6 @@ router.get('/metrics/:userId/:propertyId', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// --- Dados para o gráfico ---
 router.get('/chart/:userId/:propertyId', async (req, res) => {
     const { userId, propertyId } = req.params;
     try {
@@ -50,6 +39,72 @@ router.get('/chart/:userId/:propertyId', async (req, res) => {
     }
     catch (error) {
         console.error('Erro ao buscar dados do gráfico GA4:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// ============================================
+// SEARCH CONSOLE
+// ============================================
+// Lista os sites disponíveis no Search Console
+router.get('/searchconsole/sites/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const sites = await (0, googleAnalytics_1.getSearchConsoleSites)(userId);
+        res.json({ success: true, sites });
+    }
+    catch (error) {
+        console.error('Erro ao buscar sites Search Console:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// Métricas principais (cliques, impressões, CTR, posição)
+router.get('/searchconsole/metrics/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const siteUrl = req.query.siteUrl;
+    if (!siteUrl) {
+        res.status(400).json({ success: false, error: 'siteUrl é obrigatório' });
+        return;
+    }
+    try {
+        const metrics = await (0, googleAnalytics_1.getSearchConsoleMetrics)(userId, siteUrl);
+        res.json({ success: true, metrics });
+    }
+    catch (error) {
+        console.error('Erro ao buscar métricas Search Console:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// Dados para o gráfico por período
+router.get('/searchconsole/chart/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const siteUrl = req.query.siteUrl;
+    if (!siteUrl) {
+        res.status(400).json({ success: false, error: 'siteUrl é obrigatório' });
+        return;
+    }
+    try {
+        const chartData = await (0, googleAnalytics_1.getSearchConsoleChartData)(userId, siteUrl);
+        res.json({ success: true, chartData });
+    }
+    catch (error) {
+        console.error('Erro ao buscar gráfico Search Console:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// Top queries (palavras-chave)
+router.get('/searchconsole/queries/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const siteUrl = req.query.siteUrl;
+    if (!siteUrl) {
+        res.status(400).json({ success: false, error: 'siteUrl é obrigatório' });
+        return;
+    }
+    try {
+        const queries = await (0, googleAnalytics_1.getSearchConsoleTopQueries)(userId, siteUrl);
+        res.json({ success: true, queries });
+    }
+    catch (error) {
+        console.error('Erro ao buscar queries Search Console:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
