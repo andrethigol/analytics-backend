@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import authRoutes from './routes/auth'
 import analyticsRoutes from './routes/analytics'
 import aiRoutes from './routes/ai'
+import metaAdsRoutes from './routes/metaAds'
 
 dotenv.config()
 
@@ -15,7 +16,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // --- MIDDLEWARES ---
-  app.use(cors({
+app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:3001',
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/ai', aiRoutes)
+app.use('/api/meta', metaAdsRoutes)
 
 // --- ÍNDICE ---
 app.get('/api', (req, res) => {
@@ -54,6 +56,10 @@ app.get('/api', (req, res) => {
       '/api/analytics/chart/:userId/:propertyId',
       '/api/ai/analyze',
       '/api/ai/insight',
+      '/api/meta/accounts',
+      '/api/meta/metrics/:adAccountId',
+      '/api/meta/chart/:adAccountId',
+      '/api/meta/campaigns/:adAccountId',
     ]
   })
 })
@@ -63,6 +69,7 @@ app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`)
   console.log(`🔐 Auth Google: http://localhost:${PORT}/auth/google`)
   console.log(`🤖 AI Analysis: http://localhost:${PORT}/api/ai/analyze`)
+  console.log(`📘 Meta Ads: http://localhost:${PORT}/api/meta/accounts`)
 })
 
 export default app

@@ -12,6 +12,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const ai_1 = __importDefault(require("./routes/ai"));
+const metaAds_1 = __importDefault(require("./routes/metaAds"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,7 @@ app.get('/health', (req, res) => {
 app.use('/auth', auth_1.default);
 app.use('/api/analytics', analytics_1.default);
 app.use('/api/ai', ai_1.default);
+app.use('/api/meta', metaAds_1.default);
 // --- ÍNDICE ---
 app.get('/api', (req, res) => {
     res.json({
@@ -52,6 +54,10 @@ app.get('/api', (req, res) => {
             '/api/analytics/chart/:userId/:propertyId',
             '/api/ai/analyze',
             '/api/ai/insight',
+            '/api/meta/accounts',
+            '/api/meta/metrics/:adAccountId',
+            '/api/meta/chart/:adAccountId',
+            '/api/meta/campaigns/:adAccountId',
         ]
     });
 });
@@ -60,5 +66,6 @@ app.listen(PORT, () => {
     console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
     console.log(`🔐 Auth Google: http://localhost:${PORT}/auth/google`);
     console.log(`🤖 AI Analysis: http://localhost:${PORT}/api/ai/analyze`);
+    console.log(`📘 Meta Ads: http://localhost:${PORT}/api/meta/accounts`);
 });
 exports.default = app;
