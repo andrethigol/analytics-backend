@@ -138,7 +138,41 @@ export async function getGA4ChartData(userId: string, propertyId: string) {
 // SEARCH CONSOLE
 // ============================================
 
-// Lista todos os sites do usuário no Search Console
+// Tenta query com a siteUrl original e fallbacks alternativos
+async function querySearchConsole(searchConsole: any, siteUrl: string, requestBody: any) {
+  const urlsToTry: string[] = [siteUrl]
+
+  // Se for sc-domain, tenta também com https:// e http://
+  if (siteUrl.startsWith('sc-domain:')) {
+    const domain = siteUrl.replace('sc-domain:', '')
+    urlsToTry.push(`https://${domain}/`)
+    urlsToTry.push(`https://www.${domain}/`)
+    urlsToTry.push(`http://${domain}/`)
+  }
+  // Se for URL normal, tenta também sc-domain
+  else {
+    try {
+      const url = new URL(siteUrl)
+      urlsToTry.push(`sc-domain:${url.hostname.replace('www.', '')}`)
+    } catch {}
+  }
+
+  for (const url of urlsToTry) {
+    try {
+      const { data } = await searchConsole.searchanalytics.query({
+        siteUrl: url,
+        requestBody,
+      })
+      console.log(`✅ Search Console OK com: ${url}`)
+      return data
+    } catch (e: any) {
+      console.warn(`⚠️ Search Console falhou com ${url}: ${e.message}`)
+    }
+  }
+
+  throw new Error(`Nenhuma URL funcionou para o Search Console: ${urlsToTry.join(', ')}`)
+}
+
 export async function getSearchConsoleSites(userId: string) {
   const auth = await getAuthClientForUser(userId)
   const searchConsole = google.searchconsole({ version: 'v1', auth })
@@ -152,7 +186,6 @@ export async function getSearchConsoleSites(userId: string) {
   }))
 }
 
-// Métricas principais do Search Console (cliques, impressões, CTR, posição)
 export async function getSearchConsoleMetrics(userId: string, siteUrl: string) {
   const auth = await getAuthClientForUser(userId)
   const searchConsole = google.searchconsole({ version: 'v1', auth })
@@ -160,16 +193,12 @@ export async function getSearchConsoleMetrics(userId: string, siteUrl: string) {
   const endDate = new Date()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 30)
-
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  const { data } = await searchConsole.searchanalytics.query({
-    siteUrl,
-    requestBody: {
-      startDate: fmt(startDate),
-      endDate: fmt(endDate),
-      dimensions: [],
-    },
+  const data = await querySearchConsole(searchConsole, siteUrl, {
+    startDate: fmt(startDate),
+    endDate: fmt(endDate),
+    dimensions: [],
   })
 
   const row = data.rows?.[0]
@@ -181,7 +210,6 @@ export async function getSearchConsoleMetrics(userId: string, siteUrl: string) {
   }
 }
 
-// Dados por período para o gráfico do Search Console
 export async function getSearchConsoleChartData(userId: string, siteUrl: string) {
   const auth = await getAuthClientForUser(userId)
   const searchConsole = google.searchconsole({ version: 'v1', auth })
@@ -189,19 +217,15 @@ export async function getSearchConsoleChartData(userId: string, siteUrl: string)
   const endDate = new Date()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 30)
-
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  const { data } = await searchConsole.searchanalytics.query({
-    siteUrl,
-    requestBody: {
-      startDate: fmt(startDate),
-      endDate: fmt(endDate),
-      dimensions: ['date'],
-    },
+  const data = await querySearchConsole(searchConsole, siteUrl, {
+    startDate: fmt(startDate),
+    endDate: fmt(endDate),
+    dimensions: ['date'],
   })
 
-  return data.rows?.map(row => ({
+  return data.rows?.map((row: any) => ({
     date:        row.keys?.[0] || '',
     clicks:      Math.round(row.clicks || 0),
     impressions: Math.round(row.impressions || 0),
@@ -210,7 +234,6 @@ export async function getSearchConsoleChartData(userId: string, siteUrl: string)
   })) || []
 }
 
-// Top queries (palavras-chave) do Search Console
 export async function getSearchConsoleTopQueries(userId: string, siteUrl: string) {
   const auth = await getAuthClientForUser(userId)
   const searchConsole = google.searchconsole({ version: 'v1', auth })
@@ -218,20 +241,16 @@ export async function getSearchConsoleTopQueries(userId: string, siteUrl: string
   const endDate = new Date()
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - 30)
-
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  const { data } = await searchConsole.searchanalytics.query({
-    siteUrl,
-    requestBody: {
-      startDate: fmt(startDate),
-      endDate: fmt(endDate),
-      dimensions: ['query'],
-      rowLimit: 10,
-    },
+  const data = await querySearchConsole(searchConsole, siteUrl, {
+    startDate: fmt(startDate),
+    endDate: fmt(endDate),
+    dimensions: ['query'],
+    rowLimit: 10,
   })
 
-  return data.rows?.map(row => ({
+  return data.rows?.map((row: any) => ({
     query:       row.keys?.[0] || '',
     clicks:      Math.round(row.clicks || 0),
     impressions: Math.round(row.impressions || 0),

@@ -123,7 +123,39 @@ async function getGA4ChartData(userId, propertyId) {
 // ============================================
 // SEARCH CONSOLE
 // ============================================
-// Lista todos os sites do usuário no Search Console
+// Tenta query com a siteUrl original e fallbacks alternativos
+async function querySearchConsole(searchConsole, siteUrl, requestBody) {
+    const urlsToTry = [siteUrl];
+    // Se for sc-domain, tenta também com https:// e http://
+    if (siteUrl.startsWith('sc-domain:')) {
+        const domain = siteUrl.replace('sc-domain:', '');
+        urlsToTry.push(`https://${domain}/`);
+        urlsToTry.push(`https://www.${domain}/`);
+        urlsToTry.push(`http://${domain}/`);
+    }
+    // Se for URL normal, tenta também sc-domain
+    else {
+        try {
+            const url = new URL(siteUrl);
+            urlsToTry.push(`sc-domain:${url.hostname.replace('www.', '')}`);
+        }
+        catch { }
+    }
+    for (const url of urlsToTry) {
+        try {
+            const { data } = await searchConsole.searchanalytics.query({
+                siteUrl: url,
+                requestBody,
+            });
+            console.log(`✅ Search Console OK com: ${url}`);
+            return data;
+        }
+        catch (e) {
+            console.warn(`⚠️ Search Console falhou com ${url}: ${e.message}`);
+        }
+    }
+    throw new Error(`Nenhuma URL funcionou para o Search Console: ${urlsToTry.join(', ')}`);
+}
 async function getSearchConsoleSites(userId) {
     const auth = await getAuthClientForUser(userId);
     const searchConsole = googleapis_1.google.searchconsole({ version: 'v1', auth });
@@ -134,7 +166,6 @@ async function getSearchConsoleSites(userId) {
         permissionLevel: site.permissionLevel || '',
     }));
 }
-// Métricas principais do Search Console (cliques, impressões, CTR, posição)
 async function getSearchConsoleMetrics(userId, siteUrl) {
     const auth = await getAuthClientForUser(userId);
     const searchConsole = googleapis_1.google.searchconsole({ version: 'v1', auth });
@@ -142,13 +173,10 @@ async function getSearchConsoleMetrics(userId, siteUrl) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     const fmt = (d) => d.toISOString().split('T')[0];
-    const { data } = await searchConsole.searchanalytics.query({
-        siteUrl,
-        requestBody: {
-            startDate: fmt(startDate),
-            endDate: fmt(endDate),
-            dimensions: [],
-        },
+    const data = await querySearchConsole(searchConsole, siteUrl, {
+        startDate: fmt(startDate),
+        endDate: fmt(endDate),
+        dimensions: [],
     });
     const row = data.rows?.[0];
     return {
@@ -158,7 +186,6 @@ async function getSearchConsoleMetrics(userId, siteUrl) {
         position: Number((row?.position || 0).toFixed(1)),
     };
 }
-// Dados por período para o gráfico do Search Console
 async function getSearchConsoleChartData(userId, siteUrl) {
     const auth = await getAuthClientForUser(userId);
     const searchConsole = googleapis_1.google.searchconsole({ version: 'v1', auth });
@@ -166,15 +193,12 @@ async function getSearchConsoleChartData(userId, siteUrl) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     const fmt = (d) => d.toISOString().split('T')[0];
-    const { data } = await searchConsole.searchanalytics.query({
-        siteUrl,
-        requestBody: {
-            startDate: fmt(startDate),
-            endDate: fmt(endDate),
-            dimensions: ['date'],
-        },
+    const data = await querySearchConsole(searchConsole, siteUrl, {
+        startDate: fmt(startDate),
+        endDate: fmt(endDate),
+        dimensions: ['date'],
     });
-    return data.rows?.map(row => ({
+    return data.rows?.map((row) => ({
         date: row.keys?.[0] || '',
         clicks: Math.round(row.clicks || 0),
         impressions: Math.round(row.impressions || 0),
@@ -182,7 +206,6 @@ async function getSearchConsoleChartData(userId, siteUrl) {
         position: Number((row.position || 0).toFixed(1)),
     })) || [];
 }
-// Top queries (palavras-chave) do Search Console
 async function getSearchConsoleTopQueries(userId, siteUrl) {
     const auth = await getAuthClientForUser(userId);
     const searchConsole = googleapis_1.google.searchconsole({ version: 'v1', auth });
@@ -190,16 +213,13 @@ async function getSearchConsoleTopQueries(userId, siteUrl) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     const fmt = (d) => d.toISOString().split('T')[0];
-    const { data } = await searchConsole.searchanalytics.query({
-        siteUrl,
-        requestBody: {
-            startDate: fmt(startDate),
-            endDate: fmt(endDate),
-            dimensions: ['query'],
-            rowLimit: 10,
-        },
+    const data = await querySearchConsole(searchConsole, siteUrl, {
+        startDate: fmt(startDate),
+        endDate: fmt(endDate),
+        dimensions: ['query'],
+        rowLimit: 10,
     });
-    return data.rows?.map(row => ({
+    return data.rows?.map((row) => ({
         query: row.keys?.[0] || '',
         clicks: Math.round(row.clicks || 0),
         impressions: Math.round(row.impressions || 0),
