@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "Backend da API do Analytics Dashboard",
   "main": "src/server.ts",
-"scripts": {
-  "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-  "build": "echo skip",
-  "start": "node dist/server.js"
-},
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "echo skip",
+    "start": "node dist/server.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "google-ads-api": "^24.1.0",
     "googleapis": "^173.0.0",
     "openai": "^6.42.0",
     "ts-node": "^10.9.2",
