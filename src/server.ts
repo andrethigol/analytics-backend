@@ -9,6 +9,7 @@ import authRoutes from './routes/auth'
 import analyticsRoutes from './routes/analytics'
 import aiRoutes from './routes/ai'
 import metaAdsRoutes from './routes/metaAds'
+import googleAdsRoutes from './routes/googleAds'
 
 dotenv.config()
 
@@ -42,6 +43,7 @@ app.use('/auth', authRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/meta', metaAdsRoutes)
+app.use('/api/googleads', googleAdsRoutes)
 
 // --- ÍNDICE ---
 app.get('/api', (req, res) => {

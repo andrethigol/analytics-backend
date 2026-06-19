@@ -13,6 +13,7 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const ai_1 = __importDefault(require("./routes/ai"));
 const metaAds_1 = __importDefault(require("./routes/metaAds"));
+const googleAds_1 = __importDefault(require("./routes/googleAds"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +42,7 @@ app.use('/auth', auth_1.default);
 app.use('/api/analytics', analytics_1.default);
 app.use('/api/ai', ai_1.default);
 app.use('/api/meta', metaAds_1.default);
+app.use('/api/googleads', googleAds_1.default);
 // --- ÍNDICE ---
 app.get('/api', (req, res) => {
     res.json({
